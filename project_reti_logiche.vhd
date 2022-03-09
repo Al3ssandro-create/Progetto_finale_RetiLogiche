@@ -46,13 +46,14 @@ architecture Behavioral of project_reti_logiche is
                         
                         
     signal curr_state,next_state : state_type;
+
     
-    signal o_done_next, o_en_next, o_we_next : std_logic := '0';
-    signal o_data_next : std_logic_vector(7 downto 0) := "00000000";
-    signal o_address_next : std_logic_vector(15 downto 0) := "0000000000000000";
-    
-    signal got_dim_ing, got_dim_ing_next : boolean := false;
     signal state: STATE_TYPE := INIZIO;
+    signal has_dim: boolean := false;                                               --ha trovato la dimensione
+    signal MAX_DIM_ING: unsigned (7 downto 0 ) := (others => '1');                  --Dimensione massima ingresso 255
+    signal last_byte_address: std_logic_vector(15 downto 0 ) := (others => '0');    --indirizzo ultimo byte letto
+    signal current_byte_address: std_logic_vector(15 downto 0 ) := '0000000000000001' --indirizzo byte corrente
+
 begin
 
 
@@ -60,33 +61,76 @@ begin
 
 
 
-    transition: process(i_clk)
+    Case_scenario: process(i_clk)
+    variable var_dim : unsigned(7 downto 0) := (others => '0');
+    variable var_
     begin
-        --qua ci andr� il clk in qualche modo 
-        --
-        --
-        --
-        --
+        if rising_edge(i_clk) then
+            o_done <= '0';
+            o_en <= '0';
+            o_we <= '0';
+            o_data    <= (others => '0');
+            o_address <= (others => '0');
         if i_rst = '1' then
         --resetta il tutto
             state <= INIZIO;
         else 
             case state is  
             
-                 when INIZIO =>
-                 -- qua dovremo fare dei reset
-                 if i_start = '1' then
-                 --inzia il processo
+                when INIZIO =>
+                 -- qua facciamo i reset
+                    has_dim <= false;
+                    MAX_DIM_ING <= (others => '1');
+                    last_byte_address <= (others => '0');
+                    current_byte_address <= (others => '0');
+                    if i_start = '1' then
+                    --inzia il processo se c'è il segnale d'inzio
+                        state <= LETTURA_DIM;
+                    else
+                    --aspetta il segnale d'inizio
+                        state <= INIZIO;
+                    end if; 
+                    
+                when LETTURA_DIM =>
+                    --Abilita la memoria
+                    o_en <= '1';
+                    if not has_dim then
+                        --vado a prendere la dimensione
+                        o_address <= "0000000000000000";
+                        state <= ATTESA_LETTURA_DIM;
+                        has_dim <= true;
+                    else
+                        var:= unsigned(i_data); --# di parole
+                        if not (var = "00000000") then
+                        --continuerà
+                        --
+                        --
+                            state <= LETTURA_BYTE;
+                        else
+                            o_done <= '1';
+                            state <= FINE;  
+                        end if;    
+                    end if;
+                
+                when ATTESA_LETTURA_DIM =>
                     state <= LETTURA_DIM;
-                 else
-                 --aspetta il segnale d'inizio
-                    state <= INIZIO;
-                 end if; 
+                
+                when LETTURA_BYTE =>
+                    o_address <= current_byte_address;
+
+
+
+                        
+
+
                  
-                 when LETTURA_DIM =>
-                 --Abilita la memoria
-                 o_en <= '1';
+
+
+
+
+
+
           end case;   
         end if;
-    end process;
+    end process Case_scenario;
 end architecture;
