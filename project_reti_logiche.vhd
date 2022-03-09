@@ -60,7 +60,7 @@ begin
 
 
 
-    transition: process(i_clK)
+    transition: process(i_clk)
     begin
         --qua ci andr� il clk in qualche modo 
         --
