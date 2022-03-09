@@ -62,7 +62,7 @@ begin
 
     transition: process(i_clK)
     begin
-        --qua ci andrà il clk in qualche modo 
+        --qua ci andrï¿½ il clk in qualche modo 
         --
         --
         --
@@ -82,6 +82,10 @@ begin
                  --aspetta il segnale d'inizio
                     state <= INIZIO;
                  end if; 
+                 
+                 when LETTURA_DIM =>
+                 --Abilita la memoria
+                 o_en <= '1';
           end case;   
         end if;
     end process;
