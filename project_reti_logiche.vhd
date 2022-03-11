@@ -53,8 +53,8 @@ architecture Behavioral of project_reti_logiche is
     signal has_byte: boolean := false;                                           
     signal MAX_DIM_ING: unsigned (7 downto 0 ) := (others => '1');                  --Dimensione massima ingresso 255
     signal last_byte_address: std_logic_vector(15 downto 0 ) := (others => '0');    --indirizzo ultimo byte letto
-    signal current_byte_address: std_logic_vector(15 downto 0 ) := '0000000000000001' --indirizzo byte corrente
-    signal current_byte: std_logic_vector(7 downto 0) := '00000000';                 --byte corrente
+    signal current_byte_address: std_logic_vector(15 downto 0 ) := (others => '0'); --indirizzo byte corrente
+    signal current_byte: unsigned(7 downto 0):= (others => '0');                 --byte corrente
 
 begin
 
@@ -79,7 +79,7 @@ begin
                         has_dim <= false;
                         MAX_DIM_ING <= (others => '1');
                         last_byte_address <= (others => '0');
-                        current_byte_address :='0000000000000001';
+                        current_byte_address <= "0000000000000001";
                         if i_start = '1' then
                         --inzia il processo se c'è il segnale d'inzio
                             state <= LETTURA_DIM;
@@ -97,8 +97,8 @@ begin
                             state <= ATTESA_LETTURA_DIM;
                             has_dim <= true;
                         else
-                            var:= unsigned(i_data); --# di parole
-                            if not (var = "00000000") then
+                            var_dim := unsigned(i_data); --# di parole
+                            if not (var_dim = "00000000") then
                             --continuerà
                             --
                             --
@@ -119,15 +119,9 @@ begin
                             state <= ATTESA_LETTURA_BYTE;
                             has_dim <= true;
                         else
-                            current_byte <=unsigned(i_data);
-                            variable bit_in_byte:= '7';
-                            type state_FSM is (S00,S01,S10,S11);
-                            signal curr_state,next_state : state_FSM; 
-                            curr_state <= S00;
+                            current_byte <= unsigned(i_data);
                             --case scenario
-                            case curr_state is
-                            end case;
-
+                        end if;
                             
 
 
