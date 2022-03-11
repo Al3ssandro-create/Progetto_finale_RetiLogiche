@@ -45,25 +45,22 @@ architecture Behavioral of project_reti_logiche is
                         SCRITTURA_BYTE,ATTESA_SCRITTURA_BYTE,FINE);
                         
                         
-    signal curr_state,next_state : state_type;
+    
 
     
     signal state: STATE_TYPE := INIZIO;
-    signal has_dim: boolean := false;                                               --ha trovato la dimensione
+    signal has_dim: boolean := false;                                                --ha trovato la dimensione
+    signal has_byte: boolean := false;                                           
     signal MAX_DIM_ING: unsigned (7 downto 0 ) := (others => '1');                  --Dimensione massima ingresso 255
     signal last_byte_address: std_logic_vector(15 downto 0 ) := (others => '0');    --indirizzo ultimo byte letto
     signal current_byte_address: std_logic_vector(15 downto 0 ) := '0000000000000001' --indirizzo byte corrente
+    signal current_byte: std_logic_vector(7 downto 0) := '00000000';                 --byte corrente
 
 begin
 
 
-
-
-
-
     Case_scenario: process(i_clk)
     variable var_dim : unsigned(7 downto 0) := (others => '0');
-    variable var_
     begin
         if rising_edge(i_clk) then
             o_done <= '0';
@@ -71,52 +68,81 @@ begin
             o_we <= '0';
             o_data    <= (others => '0');
             o_address <= (others => '0');
-        if i_rst = '1' then
-        --resetta il tutto
-            state <= INIZIO;
-        else 
-            case state is  
-            
-                when INIZIO =>
-                 -- qua facciamo i reset
-                    has_dim <= false;
-                    MAX_DIM_ING <= (others => '1');
-                    last_byte_address <= (others => '0');
-                    current_byte_address <= (others => '0');
-                    if i_start = '1' then
-                    --inzia il processo se c'è il segnale d'inzio
-                        state <= LETTURA_DIM;
-                    else
-                    --aspetta il segnale d'inizio
-                        state <= INIZIO;
-                    end if; 
-                    
-                when LETTURA_DIM =>
-                    --Abilita la memoria
-                    o_en <= '1';
-                    if not has_dim then
-                        --vado a prendere la dimensione
-                        o_address <= "0000000000000000";
-                        state <= ATTESA_LETTURA_DIM;
-                        has_dim <= true;
-                    else
-                        var:= unsigned(i_data); --# di parole
-                        if not (var = "00000000") then
-                        --continuerà
-                        --
-                        --
-                            state <= LETTURA_BYTE;
+            if i_rst = '1' then
+            --resetta il tutto
+                state <= INIZIO;
+            else 
+                case state is  
+                
+                    when INIZIO =>
+                    -- qua facciamo i reset
+                        has_dim <= false;
+                        MAX_DIM_ING <= (others => '1');
+                        last_byte_address <= (others => '0');
+                        current_byte_address :='0000000000000001';
+                        if i_start = '1' then
+                        --inzia il processo se c'è il segnale d'inzio
+                            state <= LETTURA_DIM;
                         else
-                            o_done <= '1';
-                            state <= FINE;  
-                        end if;    
-                    end if;
-                
-                when ATTESA_LETTURA_DIM =>
-                    state <= LETTURA_DIM;
-                
-                when LETTURA_BYTE =>
-                    o_address <= current_byte_address;
+                        --aspetta il segnale d'inizio
+                            state <= INIZIO;
+                        end if; 
+                        
+                    when LETTURA_DIM =>
+                        --Abilita la memoria
+                        o_en <= '1';
+                        if not has_dim then
+                            --vado a prendere la dimensione
+                            o_address <= "0000000000000000";
+                            state <= ATTESA_LETTURA_DIM;
+                            has_dim <= true;
+                        else
+                            var:= unsigned(i_data); --# di parole
+                            if not (var = "00000000") then
+                            --continuerà
+                            --
+                            --
+                                state <= LETTURA_BYTE;
+                            else
+                                o_done <= '1';
+                                state <= FINE;  
+                            end if;    
+                        end if;
+                    
+                    when ATTESA_LETTURA_DIM =>
+                        state <= LETTURA_DIM;
+                    
+                    when LETTURA_BYTE =>
+                        o_en <='1';
+                        if not has_byte then
+                            o_address <= current_byte_address;
+                            state <= ATTESA_LETTURA_BYTE;
+                            has_dim <= true;
+                        else
+                            current_byte <=unsigned(i_data);
+                            variable bit_in_byte:= '7';
+                            type state_FSM is (S00,S01,S10,S11);
+                            signal curr_state,next_state : state_FSM; 
+                            curr_state <= S00;
+                            --case scenario
+                            case curr_state is
+                            end case;
+
+                            
+
+
+
+
+
+
+
+
+
+                    when ATTESA_LETTURA_BYTE =>
+                        state <= LETTURA_BYTE;
+
+                    
+                    
 
 
 
@@ -130,7 +156,8 @@ begin
 
 
 
-          end case;   
+                end case;
+            end if;
         end if;
     end process Case_scenario;
 end architecture;
