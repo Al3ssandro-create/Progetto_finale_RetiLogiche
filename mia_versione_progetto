@@ -52,7 +52,7 @@ architecture Behavioral of project_reti_logiche is
     signal last_byte_address: std_logic_vector(15 downto 0 ) := (others => '0');    --indirizzo ultimo byte letto
     signal current_byte_address: std_logic_vector(15 downto 0 ) := (others => '0'); --indirizzo byte corrente
     --signal current_byte: unsigned(7 downto 0):= (others => '0');                 --byte corrente
-    signal stato_conv: std_logic_vector(1 downto 0) := (others => '0');              --stato convolutore
+    signal stato_conv: std_logic_vector(0 to 1) := (others => '0');              --stato convolutore
 
     procedure init_loop(
         signal o_address : out std_logic_vector(15 downto 0);
@@ -112,9 +112,9 @@ begin
                             has_dim <= true;
                         else
                             var := unsigned(i_data);
-                            if not (var_dim = "0000000000000000") then
+                            if not (var = "0000000000000000") then
                                 --settiamo il limite
-                                last_byte_address <=std_logic_vector(var+1);
+                                last_byte_address <= std_logic_vector(var+1);
                                 init_loop(o_address,current_byte_address);
                                 state <= LETTURA_BYTE;
                             else
@@ -145,7 +145,7 @@ begin
                                 state <= ATTESA_LETTURA_BYTE;
                             else 
                                 o_done <='1';
-                                state <= DONE;
+                                state <= FINE;
                             end if;
                         end if;
 
@@ -157,67 +157,67 @@ begin
                         end if;
 
                     when SCRITTURA_BYTE =>
-                        if(i<=15) then
+                        if(i<16) then
                             --convolutore
-                            if(stato_conv = "00" and i_data(count)= "0") then
+                            if(stato_conv = '00' and i_data(count) = '0') then
+                                stato_conv <= '00';
+                                --salvo stringa tradotta
+                                uscita(i) := '0';
+                                i := i+1;
+                                uscita(i) := '0';
+                                i := i+1;
+                            elsif(stato_conv = '00' and i_data(count)= '1') then
+                                stato_conv <= '10';
+                                --salvo stringa tradotta
+                                uscita(i) := '1';
+                                i := i+1;
+                                uscita(i) := '1';
+                                i := i+1;
+                            elsif(stato_conv = '10' and i_data(count)= '0') then
+                                stato_conv <= '01';
+                                --salvo stringa tradotta
+                                uscita(i) := '0';
+                                i := i+1;
+                                uscita(i) := '1';
+                                i := i+1;
+                            elsif(stato_conv = '10' and i_data(count)= '1') then 
+                                stato_conv <= '11';
+                                --salvo stringa tradotta
+                                uscita(i) := '1';
+                                i := i+1;
+                                uscita(i) := '0';
+                                i := i+1;
+                            elsif(stato_conv = '01' and i_data(count)= '0') then
                                 stato_conv <= "00";
                                 --salvo stringa tradotta
-                                uscita(i) <= '0';
-                                i <= i+1;
-                                uscita(i) <= '0';
-                                i <= i+1;
-                            elsif(stato_conv = "00" and i_data(count)= "1") then
+                                uscita(i) := '1';
+                                i := i+1;
+                                uscita(i) := '1';
+                                i := i+1;
+                            elsif(stato_conv = '01' and i_data(count)= '1') then
                                 stato_conv <= "10";
                                 --salvo stringa tradotta
-                                uscita(i) <= '1';
-                                i <= i+1;
-                                uscita(i) <= '1';
-                                i <= i+1;
-                            elsif(stato_conv = "10" and i_data(count)= "0") then
-                                stato_conv <= "01";
+                                uscita(i) := '0';
+                                i := i+1;
+                                uscita(i) := '0';
+                                i := i+1;
+                            elsif(stato_conv = '11' and i_data(count)= '0') then 
+                                stato_conv <= '01';
                                 --salvo stringa tradotta
-                                uscita(i) <= '0';
-                                i <= i+1;
-                                uscita(i) <= '1';
-                                i <= i+1;
-                            elsif(stato_conv = "10" and i_data(count)= "1") then 
-                                stato_conv <= "11";
+                                uscita(i) := '1';
+                                i := i+1;
+                                uscita(i) := '0';
+                                i := i+1;
+                            elsif(stato_conv = '11' and i_data(count)= '1') then 
+                                stato_conv <= '11';
                                 --salvo stringa tradotta
-                                uscita(i) <= '1';
-                                i <= i+1;
-                                uscita(i) <= '0';
-                                i <= i+1;
-                            elsif(stato_conv = "01" and i_data(count)= "0") then
-                                stato_conv <= "00";
-                                --salvo stringa tradotta
-                                uscita(i) <= '1';
-                                i <= i+1;
-                                uscita(i) <= '1';
-                                i <= i+1;
-                            elsif(stato_conv = "01" and i_data(count)= "1") then
-                                stato_conv <= "10";
-                                --salvo stringa tradotta
-                                uscita(i) <= '0';
-                                i <= i+1;
-                                uscita(i) <= '0';
-                                i <= i+1;
-                            elsif(stato_conv = "11" and i_data(count)= "0") then 
-                                stato_conv <= "01";
-                                --salvo stringa tradotta
-                                uscita(i) <= '1';
-                                i <= i+1;
-                                uscita(i) <= '0';
-                                i <= i+1;
-                            elsif(stato_conv = "11" and i_data(count)= "1") then 
-                                stato_conv <= "11";
-                                --salvo stringa tradotta
-                                uscita(i) <= '0';
-                                i <= i+1;
-                                uscita(i) <= '1';
-                                i <= i+1;
+                                uscita(i) := '0';
+                                i := i+1;
+                                uscita(i) := '1';
+                                i := i+1;
                             end if;
                             --decremento count cosi al prox ciclo di clock leggo il bit successivo
-                            count <= count - 1; 
+                            count := count - 1; 
                         else
                             --ora ho i due byte pronti per essere scritti in memoria
                             -- attivo la memoria
@@ -227,11 +227,11 @@ begin
                             if(j=0) then -- per scrivere il primo byte del vettore uscita
                                 --devo settare l'indirizzo di scrittura
                                 o_data <= uscita(0 to 7);
-                                j <= j+1;
+                                j := j+1;
                             else -- per scrivere il secondo byte del vettore uscita
                                 --devo settare l'indirizzo di scrittura
                                 o_data <= uscita(8 to 15);
-                                j <= 0;
+                                j := 0;
                             end if;    
 
                         end if;
