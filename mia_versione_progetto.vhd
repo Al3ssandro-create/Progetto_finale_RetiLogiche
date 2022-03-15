@@ -69,7 +69,7 @@ begin
     --variabile per tenere a mente il valore durante i calcoli
     variable var : unsigned(7 downto 0) := (others => '0');
     --variabile per memorizzare l'uscita
-    variable uscita: unsigned(0 to 15) := (others => '0');
+    variable uscita: std_logic_vector(0 to 15) := (others => '0');
     --contatore
     variable count : integer := 7;
     variable i : integer := 0;
@@ -159,57 +159,57 @@ begin
                     when SCRITTURA_BYTE =>
                         if(i<16) then
                             --convolutore
-                            if(stato_conv = '00' and i_data(count) = '0') then
-                                stato_conv <= '00';
+                            if(stato_conv = "00" and i_data(count) = '0') then
+                                stato_conv <= "00";
                                 --salvo stringa tradotta
                                 uscita(i) := '0';
                                 i := i+1;
                                 uscita(i) := '0';
                                 i := i+1;
-                            elsif(stato_conv = '00' and i_data(count)= '1') then
-                                stato_conv <= '10';
+                            elsif(stato_conv = "00" and i_data(count)= '1') then
+                                stato_conv <= "10";
                                 --salvo stringa tradotta
                                 uscita(i) := '1';
                                 i := i+1;
                                 uscita(i) := '1';
                                 i := i+1;
-                            elsif(stato_conv = '10' and i_data(count)= '0') then
-                                stato_conv <= '01';
+                            elsif(stato_conv = "10" and i_data(count)= '0') then
+                                stato_conv <= "01";
                                 --salvo stringa tradotta
                                 uscita(i) := '0';
                                 i := i+1;
                                 uscita(i) := '1';
                                 i := i+1;
-                            elsif(stato_conv = '10' and i_data(count)= '1') then 
-                                stato_conv <= '11';
+                            elsif(stato_conv = "10" and i_data(count)= '1') then 
+                                stato_conv <= "11";
                                 --salvo stringa tradotta
                                 uscita(i) := '1';
                                 i := i+1;
                                 uscita(i) := '0';
                                 i := i+1;
-                            elsif(stato_conv = '01' and i_data(count)= '0') then
+                            elsif(stato_conv = "01" and i_data(count)= '0') then
                                 stato_conv <= "00";
                                 --salvo stringa tradotta
                                 uscita(i) := '1';
                                 i := i+1;
                                 uscita(i) := '1';
                                 i := i+1;
-                            elsif(stato_conv = '01' and i_data(count)= '1') then
+                            elsif(stato_conv = "01" and i_data(count)= '1') then
                                 stato_conv <= "10";
                                 --salvo stringa tradotta
                                 uscita(i) := '0';
                                 i := i+1;
                                 uscita(i) := '0';
                                 i := i+1;
-                            elsif(stato_conv = '11' and i_data(count)= '0') then 
-                                stato_conv <= '01';
+                            elsif(stato_conv = "11" and i_data(count)= '0') then 
+                                stato_conv <= "01";
                                 --salvo stringa tradotta
                                 uscita(i) := '1';
                                 i := i+1;
                                 uscita(i) := '0';
                                 i := i+1;
-                            elsif(stato_conv = '11' and i_data(count)= '1') then 
-                                stato_conv <= '11';
+                            elsif(stato_conv = "11" and i_data(count)= '1') then 
+                                stato_conv <= "11";
                                 --salvo stringa tradotta
                                 uscita(i) := '0';
                                 i := i+1;
