@@ -42,6 +42,7 @@ architecture Behavioral of project_reti_logiche is
     signal state: STATE_TYPE := INIZIO;
     signal has_dim: boolean := false;     --flag che indica se la dimensione è stata letta dalla memoria(indirizzo 0)
     signal has_byte: boolean := false;    --flag che indica se il byte è stata letto dalla memoria
+    signal first: boolean := false;
     signal last_byte_address: std_logic_vector(15 downto 0 ) := (others => '0');    --indirizzo dell'ultimo byte letto 
     signal current_byte_address: std_logic_vector(15 downto 0 ) := (others => '0'); --indirizzo del byte corrente
     signal stato_conv: std_logic_vector(1 downto 0) := "00"; --segnale che mi rappresenta gli stati del convolutore
@@ -59,7 +60,6 @@ begin
     --contatori interi
     variable count : integer := 7; --per scorrere tutti i bit del byte che leggo-->va da 7 a 0
     variable i : integer := 0; --per scrivere tutti i bit nel vettore uscita -->va da 0 a 15
-    variable j : integer := 0; --per gestire la scrittura dei due byte in memoria
     variable z : integer := 0; --per aiutarmi a scrivere i due byte al giusto indirizzo di memoria
 
 
@@ -216,21 +216,21 @@ begin
                             -- attivo segnale di scrittura
                             o_we <= '1';
 
-                            if(j=0) then -- per scrivere il primo byte del vettore uscita
+                            if not first then -- per scrivere il primo byte del vettore uscita
                                 --primo indirizzo di memoria dei due byte di output
                                 o_address <= std_logic_vector(unsigned(current_byte_address) + unsigned(offset_999)+z);
                                 o_data <= uscita(0 to 7); --primi 8 bit del vettore 'uscita'
-                                j := j+1; 
+                                first <= true;
                                 state <= SCRITTURA_BYTE;
                             else -- per scrivere il secondo byte del vettore uscita
                                 --secondo indirizzo di memoria dei due byte di uscita(incremento di 1 l'indirizzo precedente)
                                 o_address <= std_logic_vector(unsigned(current_byte_address) + unsigned(offset_999)+z+1);
                                 o_data <= uscita(8 to 15); --8 bit restanti del vettore 'uscita'
-                                j := 0; --azzero variabile j per i cicli successivi
+                                first <= false;
                                 i := 0; --azzero varibaile i per i cicli successivi
                                 count :=7; --resetto count al suo valore iniziale per ripartire a leggere il byte da sx verso dx
                                 z := z+1; --incremento questa variabile che mi aiuta ad avere il giusto offset per la scrittura in memoria
-                                state <= ATTESA_LETTURA_BYTE;
+                                state <= LETTURA_BYTE;
                             end if;    
                         end if;
 
@@ -238,7 +238,7 @@ begin
                         if (i_start = '0') then
                             z :=0; --azzero la variabile che mi aiuta ad avere il giusto offset per la scrittura in memoria,per un eventuale uso successivo
                             stato_conv <= "00"; --"resetto" la FSM che gestisce il meccanismo di convoluzione,per un eventuale uso successivo
-                            state <= INIZIO
+                            state <= INIZIO;
                         else 
                             o_done <= '1';
                             state <= FINE;
