@@ -1,3 +1,9 @@
 # Progetto_finale_RetiLogiche
-Questa è la Prova Finale del Corso di Laurea in Ingegneria Informatica presso il Politecnico di Milano. Il docente di riferimento è il Prof. Fabio Salice.
-La prova consiste nel descrivere un componente hardware che legge da memoria delle parole da 8 bit. Poi, dopo averle elaborate applicando un codice convoluzionale 1/2, le riscrive in memoria in degli indirizzi specifici e contigui.
+Questo è il progetto finale del corso di laurea in ingegneria informatica, l'esame di riferimento è RETI LOGICHE con professore SALICE 
+- [File-vhd](https://github.com/Al3ssandro-create/Progetto_finale_RetiLogiche/blob/main/10722458_10700492.vhd)
+- [Specifica](https://github.com/Al3ssandro-create/Progetto_finale_RetiLogiche/blob/main/Specifica.pdf)
+- [Regole](https://github.com/Al3ssandro-create/Progetto_finale_RetiLogiche/blob/main/Regole.pdf)
+- [Relazione]()
+## Developers
+[Alessandro Martinolli](https://github.com/Al3ssandro-create) &
+[Matteo Luppi](https://github.com/lups2000)
