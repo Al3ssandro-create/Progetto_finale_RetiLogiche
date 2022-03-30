@@ -1,0 +1,215 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{imakeidx}
+\usepackage[italian]{babel}
+\usepackage{graphicx}
+\usepackage[export]{adjustbox}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+    \title{%
+      \textbf{\LARGE Prova Finale(Progetto Reti Logiche)}\\
+       {\Large Prof. Fabio Salice - Anno Accademico 2021-2022}}
+    
+    \author{Matteo Luppi(Codice Persona 10722458 - Matricola 937186)
+    \\ Alessandro Martinolli(Codice Persona 10700492  - Matricola 933814)}
+    \date{1 Aprile 2022}
+\graphicspath{{graphics/}}
+\begin{document}
+\maketitle
+\tableofcontents
+\clearpage
+\section{Introduzione}
+\subsection{Scopo del progetto}
+Lo scopo del progetto è quello di implementare un componente hardware, descritto in linguaggio VHDL; in particolare, nel nostro caso abbiamo descritto un modulo che riceve in input una sequenza continua di W parole (ognuna da 8 bit) e restituisce in output una sequenza continua di Z parole (sempre da 8 bit). Ogni byte letto in ingresso genera 2 byte in uscita secondo \textbf{l'algoritmo di convoluzione $\frac{1}{2}$}, approfondito nella sezione \ref{Algoritmo}.
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=10cm]{foto_intro.png}
+    \caption{Meccanismo di Convoluzione $\frac{1}{2}$}
+    \label{fig:foto_intro}
+\end{figure}
+\subsection{L'algoritmo di convoluzione}
+\label{Algoritmo}
+La codifica convoluzionale, applicata in questo caso, può essere schematizzata nel seguente modo: il flusso di W parole (ognuna formata da 8 bit) viene serializzato, formando un flusso continuo di lunghezza ${8}\times{W}$ bit. Ognuno di questi bit viene codificato in due bit, attraverso il meccanismo descritto dalla macchina a stati rappresentata in figura \ref{fig:FSM_convolutore}, formando un flusso continuo in uscita di lunghezza ${8}\times{W}\times{2}$.
+\begin{figure}[htp]
+    \includegraphics[width=12cm]{foto_conv_fsm.png}
+    \caption{FSM del convolutore}
+    \label{fig:FSM_convolutore}
+\end{figure}
+\\
+Il flusso in uscita viene successivamente parallelizzato in parole formate da 8 bit, che vanno a formare l'output del nostro componente.
+\\
+\textbf{\normalsize{ESEMPIO:}}
+\\
+Input: 10100010 
+\\
+Output: 11010001 e 11001101
+
+
+\subsection{Struttura Memoria}
+Le parole in input andranno lette da una memoria, poi codificate e reinserite nella medesima. Quindi, data la tipologia di codifica, a ogni parola letta corrisponderanno due parole scritte in memoria.
+Le celle di memoria sono indirizzate al byte, ovvero ogni indirizzo identifica un singolo byte in memoria, e sono suddivise le seguente modo:
+\begin{itemize}
+    \item\textbf{Cella (0):} contiene l'informazione relativa alla dimensione \textit{dim} dell'ingresso, ovvero il numero di parole (da 8 bit ciascuna) che andranno a formare il flusso in ingresso.
+    \item \textbf{Cella (1) ... Cella (\textit{dim}-1):} contengono le parole da leggere e da codificare.
+    \item \textbf{Cella(1000) ... Cella({2}\textit{dim}-1):} contengono le parole prodotte in seguito all'applicazione dell'algoritmo di convoluzione.
+
+\end{itemize}   
+    La tipologia e il protocollo della memoria sono dati dalla specifica; infatti l'implementazione di quest'ultima non fa parte del progetto.\\ 
+    Tutta la documentazione è reperibile al seguente \textbf{\textcolor{blue}{\href{https://docs.xilinx.com/v/u/2017.3-English/ug901-vivado-synthesis}{link}}}.
+
+\subsection{Interfaccia Componente}
+L'interfaccia del componente viene assegnata dalla specifica del progetto ed è così definita:
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=11cm,frame]{entity.png}
+    \label{fig:interface}
+\end{figure}
+\\I segnali che vediamo qua definiti possono essere divisi in segnali di input e segnali di output:\\\\
+\textbf{INPUT:}
+\begin{itemize}
+\item \textbf{i\_clk} Segnale di CLOCK.
+\item \textbf{i\_rst} Segnale di RESET che prepara la macchina alla ricezione del segnale di START.
+\item \textbf{i\_start} Segnale di START che avvia la macchina.
+\item \textbf{i\_data} Segnale (vettore) che porta l'informazione dalla memoria dopo la richiesta di lettura.
+\end{itemize}
+\textbf{OUTPUT:}
+\begin{itemize}
+\item \textbf{o\_address} Segnale che manda l'indirizzo alla memoria.
+\item \textbf{o\_done} Segnale DONE che comunica la fine della procedura.
+\item \textbf{o\_en} Segnale ENABLE che abilita la comunicazione con la memoria sia in lettura che in scrittura.
+\item \textbf{o\_we} Segnale WRITE ENABLE che abilita la scrittura in memoria. In fase di lettura deve essere pari a 0.
+\item \textbf{o\_data} Segnale (vettore) che invia l'informazione alla memoria dopo la richiesta di scrittura.
+\end{itemize}
+\subsection{Utilizzo dei Segnali dell'Interfaccia}
+Il modulo inizierà l'elaborazione quando il segnale \textbf{i\_start} viene portato 1. Il segnale di \textbf{i\_start} rimarrà alto fino a che il segnale \textbf{o\_done} non verrà portato a 1, cosa che avverrà solo a fine elaborazione. Il segnale \textbf{o\_done} una volta alzato rimarrà alto fino a che il segnale \textbf{i\_start} non sarà riportato a 0. Se il segnale \textbf{i\_start} venisse rialzato il modulo dovrà ripartire con la codifica. 
+Prima di poter utilizzare il modulo è necessario resettarlo tramite il segnale \textbf{i\_rst}; però successive elaborazioni oltre alla prima non richiedono tale passaggio.
+
+\begin{figure}[htp]
+    \raggedleft
+    \includegraphics[width=13cm]{Controller.png}
+    \label{fig:segnali}
+\end{figure}
+\clearpage
+%nuova sezione
+\section{Architettura}
+Dal punto di vista architetturale, abbiamo deciso di descrivere il modulo in esame implementando una macchina a stati finiti (FSM). Inoltre, dal momento che non si trattava di un problema di complessità elevata, abbiamo optato per una soluzione con un singolo process dettato da un segnale di clock.
+\subsection{Funzionamento}
+La macchina a stati va inizialmente a leggere dalla memoria la quantità di parole da codificare. Una volta fatto ciò inizia a leggere ogni singolo byte per processarlo e codificarlo secondo la codifica spiegata nella sezione \ref{Algoritmo}.\\ 
+Terminata la codifica del byte si procede ad una fase di scrittura in memoria. L'intero processo si conclude quando sono finiti i byte da leggere.
+\\
+\\
+\begin{figure}[htp]
+% \alignment
+    \includegraphics[width=15cm]{FSM_Project.png}
+    \caption{FSM Progetto}
+    \label{fig:FSM_project}
+\end{figure}
+\clearpage
+
+\subsection{Stati della Macchina}
+La macchina in questione è composta da 7 stati. Di seguito è fornita una breve descrizione per ognuno di essi.
+\subsubsection{\normalfont{INIZIO}}
+Stato iniziale nel quale si attende che il segnale \textbf{i\_start} venga alzato. Inoltre nel caso venga alzato il segnale di \textbf{i\_rst} si torna in questo stato.
+\label{INIZIO}
+\subsubsection{\normalfont{LETTURA DIM}}
+Stato in cui viene richiesta la lettura della dimensione in input, cioè il numero di parole da 8 bit da leggere. Se la dimensione è nulla non parte nessuna codifica, si alza il segnale \textbf{o\_done} e si va nello stato \ref{FINE}.
+\label{LETTURA_DIM}
+\subsubsection{\normalfont{ATTESA LETTURA DIM}}
+Stato in cui si attende la risposta della memoria a seguito della richiesta di lettura fatta nello stato \ref{LETTURA_DIM}. \footnote{Tale stato è necessario dal momento che la memoria in questione, una volta ricevuta una richiesta di lettura, impiega un ulteriore ciclo di clock a fornire la risposta.}
+\label{ATTESA_LETTURA_DIM}
+\subsubsection{\normalfont{LETTURA BYTE}}
+Stato in cui vado a determinare l'indirizzo del byte da leggere che viene poi assegnato a \textbf{o\_address}. Se ho letto tutti i byte alzo il segnale \textbf{o\_done} e vado nello stato \ref{FINE}.
+\label{LETTURA_BYTE}
+\subsubsection{\normalfont{ATTESA LETTURA BYTE}}
+Stato in cui si attende la risposta della memoria a seguito della richiesta di lettura di un byte fatta nello stato \ref{LETTURA_BYTE}. \footnotemark[\value{footnote}]
+\label{ATTESA_LETTURA_BYTE}
+\subsubsection{\normalfont{SCRITTURA BYTE}}
+Stato in cui viene svolta la codifica del byte letto secondo l'algoritmo di convoluzione spiegato nella sezione \ref{Algoritmo}. Ogni byte letto genera due byte in uscita che poi vengono scritti in memoria a due indirizzi differenti ma contigui specificati dal segnale \textbf{o\_address}.
+\subsubsection{\normalfont{FINE}}
+Stato in cui si attende che \textbf{i\_start} venga abbassato per poi in seguito abbassare \textbf{o\_done} e tornare nello stato \ref{INIZIO}.
+\label{FINE}
+\clearpage
+\subsection{Registri Interni della Macchina}
+Per la descrizione della nostra macchina macchina ci siamo serviti dei seguenti registri:
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=11cm,frame]{Signals.png}
+    \label{fig:signals}
+\end{figure}
+\\
+%
+Dove:
+\begin{itemize}
+    \item \textbf{has\_dim} Tale registro indica se il numero di parole in input è stato letto.
+    \item \textbf{has\_byte} Tale registro indica se il byte è stato letto.
+    \item \textbf{first} Tale registro aiuta nella scrittura dei due byte in memoria.
+    \item \textbf{last\_byte\_address} Tale registro indica l'indirizzo dell'ultimo byte.
+    \item \textbf{current\_byte\_address} Tale registro indica l'indirizzo del byte corrente, quello che stiamo codificando.
+    \item \textbf{stato\_conv} Tale registro permette di rappresentare i 4 stati del convolutore come si nota in figura \ref{fig:FSM_convolutore}.
+    \item \textbf{offset\_999} Tale registro permette di avere il giusto offset quando scriviamo i byte in memoria.
+
+\end{itemize}
+
+\subsection{Variabili del Processo}
+All'interno del process abbiamo utilizzato le seguenti variabili di supporto:
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=11cm,frame]{Variables.png}
+    \label{fig:variables}
+\end{figure}
+\\
+%
+Dove:
+\begin{itemize}
+    \item \textbf{var} Variabile di supporto. Vado a salvarmi prima il numero di parole in input, poi l'indirizzo del byte successivo.
+    \item \textbf{uscita} Variabile in cui vado a salvarmi i due byte di output(dato che ogni byte in ingresso ne genera due in uscita, come ben rappresentato in figura \ref{fig:foto_intro}).
+    \item \textbf{count} Variabile che utilizzo per scorrere ogni singolo bit del byte appena letto.
+    \item \textbf{i} Variabile che utilizzo come contatore per scrivere nella variabile 'uscita'.
+    \item \textbf{z} Variabile che utilizzo per scrivere i due byte di uscita al corretto indirizzo di memoria.
+
+\end{itemize}
+%nuova sezione
+\section{Risultati sperimentali}
+\subsection{Sintesi}
+Il nostro componente è correttamente simulabile ed implementabile dal tool VIVADO; a questo proposito sono stati utilizzati 127 FF e 246 LUT (rispettivamente lo 0.05\% e lo 0.18\% del totale, come si può notare a figura \ref{fig:report}). Inoltre, abbiamo prestato particolare attenzione nella scrittura del codice per evitare l'inserimento di \textit{latch}, componenti asincroni che spesso generano comportamenti indesiderati e loop infiniti per il fatto che non sono controllati da un segnale di clock.
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=11cm,frame]{FF_e_LUT.png}
+    \caption{Sintesi}
+    \label{fig:sintesi}
+\end{figure}
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=8cm,frame]{Report_utilization.png}
+    \caption{Report Utilization}
+    \label{fig:report}
+\end{figure}
+
+\subsection{Simulazioni}
+Per verificare il corretto funzionamento del nostro componente, lo abbiamo testato più volte con dei TestBench. Abbiamo simulato il componente sia in \textit{Behavioral Simulation} che in \textit{Post-Sintesis Functional Simulation}.\\ Inizialmente abbiamo utlizzato i test che ci sono stati forniti dal docente, però in seguito per ottenere una maggiore copertura, abbiamo optato per generarli con uno script python.\\
+Di seguito sono riportati i test a nostro avviso più rilevanti, in termini di funzionamento e di copertura di corner case.\footnote{Andremo in particolar modo a descrivere i test fornitoci dal docente dato che coprono buona parte dei casi interessanti}
+\subsubsection{Test 1: 'tb\_esempio1.vhd' }
+Test che va a coprire un caso generale verificando se il componente descritto funziona correttamente in uno scenario banale.
+\clearpage
+\subsubsection{Test 2: 'tb\_seq\_max.vhd'}
+Test che va a verificare il caso particolare in cui il numero di parole da leggere è massimo, cioè pari a 255 parole. In output avremo 510 parole da 8 bit.
+\subsubsection{Test 3: 'tb\_seq\_min.vhd'}
+Test che va a verificare il caso particolare in cui il numero di parole da leggere è pari a 0. In questo caso il componente non deve effettuare alcuna codifica nonostante la presenza di parole in memoria.
+\subsubsection{Test 4: 'tb\_reset.vhd'}
+Test che va a verificare il corretto funzionamento del componente nel particolare scenario in cui un processo viene interrotto dal segnale \textbf{i\_rst} e un secondo viene avviato.
+\subsubsection{Test 5: 'tb\_doppio\_uguale.vhd'}
+Test che va a verificare il caso particolare in cui effettuo due volte la stessa lettura e scrittura sulla stessa ram senza che che venga alzato il segnale di \textbf{i\_rst}.
+\subsubsection{Test 6: 'tb\_re\_encode.vhd'}
+Test che va a verificare il caso di 3 flussi codificati uno dopo l'altro. La quantità di parole da leggere nei tre casi è identica e pari a 5; quello che cambia sono le parole lette e scritte.
+\label{tb_re_encode}
+\subsubsection{Test 7: 'tb\_tre\_reset.vhd'}
+Test simile a quello descritto nella sezione \ref{tb_re_encode} con la differenza che viene alzato il segnale di \textbf{i\_rst} sul primo flusso. Inoltre in questo test la quantità di parole da leggere è sempre pari a 3.
+\\
+
+\section{Conclusioni}
+Si ritiene che l'architettura descritta rispetti \textit{in toto} la specifica: infatti, il componente ha superato numerosi test che gli sono stati sottoposti sia in \textit{Behavioral Simulation} che in \textit{Post-Sintesis Functional Simulation}. Inoltre, tale architettura evita completamente l'utilizzo di \textit{latch} che avrebbero potuto creare anomalie e cicli infiniti all'interno della nostra implementazione.\\
+ Per concludere, la scelta di optare per una soluzione monomodulare (a singolo process) ci ha permesso di ottenere una struttura del codice pulita, logica e chiara.
+
+\end{document}
