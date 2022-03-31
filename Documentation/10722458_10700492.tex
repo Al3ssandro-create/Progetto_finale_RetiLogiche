@@ -83,7 +83,7 @@ L'interfaccia del componente viene assegnata dalla specifica del progetto ed è 
 \item \textbf{o\_data} Segnale (vettore) che invia l'informazione alla memoria dopo la richiesta di scrittura.
 \end{itemize}
 \subsection{Utilizzo dei Segnali dell'Interfaccia}
-Il modulo inizierà l'elaborazione quando il segnale \textbf{i\_start} viene portato 1. Il segnale di \textbf{i\_start} rimarrà alto fino a che il segnale \textbf{o\_done} non verrà portato a 1, cosa che avverrà solo a fine elaborazione. Il segnale \textbf{o\_done} una volta alzato rimarrà alto fino a che il segnale \textbf{i\_start} non sarà riportato a 0. Se il segnale \textbf{i\_start} venisse rialzato il modulo dovrà ripartire con la codifica. 
+Il modulo inizierà l'elaborazione quando il segnale \textbf{i\_start} viene portato a 1. Il segnale di \textbf{i\_start} rimarrà alto fino a che il segnale \textbf{o\_done} non verrà portato a 1, cosa che avverrà solo a fine elaborazione. Il segnale \textbf{o\_done} una volta alzato rimarrà alto fino a che il segnale \textbf{i\_start} non sarà riportato a 0. Se il segnale \textbf{i\_start} venisse rialzato il modulo dovrà ripartire con la codifica. 
 Prima di poter utilizzare il modulo è necessario resettarlo tramite il segnale \textbf{i\_rst}; però successive elaborazioni oltre alla prima non richiedono tale passaggio.
 
 \begin{figure}[htp]
@@ -132,7 +132,7 @@ Stato in cui si attende che \textbf{i\_start} venga abbassato per poi in seguito
 \label{FINE}
 \clearpage
 \subsection{Registri Interni della Macchina}
-Per la descrizione della nostra macchina macchina ci siamo serviti dei seguenti registri:
+Per la descrizione della nostra macchina ci siamo serviti dei seguenti registri:
 \begin{figure}[htp]
     \centering
     \includegraphics[width=11cm,frame]{Signals.png}
